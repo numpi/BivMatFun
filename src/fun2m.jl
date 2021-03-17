@@ -1,4 +1,15 @@
-function estimate_condeig(V)
+"""
+    estimate_condeig(V)
+
+Estimate the condition number of an upper triangular matrix V; the matrix 
+V is expected to be either a `Matrix{ComplexF64}` or `Matrix{Complex{BigFloat}}`. 
+
+The condition number is first estimated converting the matrix in standard floating 
+point; if the estimate is not accurate enough, it is replaced with the condition number 
+of |V|; if the latter is too loose, it is computed in higher precision. 
+"""
+function estimate_condeig(V::UpperTriangular)
+
   # Compute a floating point version of V
   VF = convert(Matrix{ComplexF64}, V)
   p = 1
@@ -24,6 +35,12 @@ function estimate_condeig(V)
   return kV3
 end
 
+"""
+    build_eigendecomp_tree!(T::BivMatTree, maxkV::Float64, A::Union{Matrix{ComplexF64}, Matrix{Float64}}, meth::Algorithm, use_mp = true)
+
+This recursive routine is used to construct the eigenvector matrices related to the atomic blocks of the 
+matrix A (i.e., the diagonal blocks corresponding to the selected partitioning).
+"""
 function build_eigendecomp_tree!(T::BivMatTree, maxkV::Float64, A::Union{Matrix{ComplexF64}, Matrix{Float64}}, meth::Algorithm, use_mp = true)	
 	if isa(T.A11, BivMatTreeTail)
 		uh = eps() / T.kV / maxkV;
@@ -45,13 +62,13 @@ function build_eigendecomp_tree!(T::BivMatTree, maxkV::Float64, A::Union{Matrix{
 	end
 end
 
+"""
+    build_partition_tree!(T, A, ind, strategy, method, delta = 0.1, bs = 1, mergeblocks = true)
+
+Recursive function constructing the partition tree for a matrix A, according to the given parameters for 
+separating the eigenvalues. 
+"""
 function build_partition_tree!(T, A, ind, strategy, method, delta = 0.1, bs = 1, mergeblocks = true)
-	# Returns [T, nblocks, maxkV]
-	#
-	# A 		matrix
-	# ind 		array of index subsets
-	# strategy  'balanced' or 'single'
-	#
 	
 	l = length(ind);
 	
@@ -147,9 +164,7 @@ function build_partition_tree!(T, A, ind, strategy, method, delta = 0.1, bs = 1,
 	end
 end
 
-function fun2m_preprocessing(A, deltaA, method, bs)
-
-  strategy = "balanced"
+function fun2m_preprocessing(A, deltaA, method, bs, strategy)
 
   if istriu(A)
     TA = A; UA = one(A);
@@ -182,29 +197,30 @@ function fun2m_preprocessing(A, deltaA, method, bs)
   return UA, TA, treeA, nblocksA
 end
 
+"""
+    fun2m(f, A, B, C; <keyword arguments>)
 
-function fun2m(f, A, B, C; delta = 0.05, method::Algorithm = Diag, bs::Union{Nothing, Int64} = nothing, 
-               min_digits::Int64 = 0, strategy = "balanced", user_function = nothing, parallel::Bool = true)
-	#FUNM2 Evaluate general bivariate matrix function with or without using derivastives.
-	#   FUN2M(f, A, B, C) evaluates the function_handle fun at the square
-	#   matrices A, B and applies it ot the matrix C.
-	#   The algorithm uses a Schur-Parlett like procedure that computes the
-	#   functions of the diagonal blocks in the Schur form either using truncated Taylor expansions
-	#   or randomized approximate diagonalization with a diagonal perturbation.
-	#
-	#   FUN2M(f, A, B, C, delta, metho) specifies the blocking parameter delta,
-	#   which defaults to 0.1 and the method for evaluating the atomic blocks, whose default
-	#   is evaluating the bivariate truncated Taylor expansion
-	#
-	# Parameters:
-	#   METH: Can be 'taylor' or 'diag' or a handle function:
-	#
-	#     - 'taylor': Use a Taylor expansion on the blocks. In this case, fun
-	#        needs to be able to compute derivatives.
-	#     - 'diag': Perturb-and-diagonalization approach. No derivatives are
-	#        required.
-	#     -  If meth is a handle function it must accept (A,B,C) and return
-	#        f{A,B}(C) for small matrices.
+Evaluate the bivariate matrix functions X = f{A, B^T}(C); the function f should have 
+the prototype:
+
+    f = (x,y,i,j) -> f^(i,j)(x,y),
+
+which denotes the i-th derivative of f with respect to x, the j-th derivative with respect to y, evaluate at a point (x, y).
+
+Note that, unless `BivMatFun.Taylor` is used (see below), this function is always called with `i = j = 0`. 
+
+# Arguments
+Several optional arguments can be specified to control the behavior of `fun2m`:
+- `delta::Float64 = 0.05`: Minimum separation between the eigenvalues, used to determined the partitioning. 
+- `method::Algorithm = BivMatFun.Diag`: Algorithm used to evaluate the function. The default is `BivMatFun.Diag`, which implements a mixed precision perturb and diagonalize approach. Other options are `BivMatFun.Taylor` (using Taylor expansions at the atomic blocks), or `BivMatFun.DiagNoHp`, which uses perturb-and-diagonalize avoiding multiprecision. The last option is provided for benchmarks only, and is not expected to be accurate. The only option that needs to evaluate the derivatives is `BivMatFun.Taylor`. For all other cases the function `f` is always called with `i = j = 0`. 
+- `bs::Union{Nothing, Int64} = nothing`: Minimum block-size to use in the partitioning. Specify `nothing` to automatically choose an optimal value based on the chosen `method`.
+- `min_digits::Int64 = 0`: Minimum number of digits to use in multiprecision computations. Use `0` (default) to not pose any constraint. 
+- `strategy::String = "balanced"`: strategy to use for splitting the blocks. Valid options are "balanced" or "single". 
+- `user_function = nothing`: if different from nothing, this function is used to evaluate the atomic blocks. It needs to have the prototype (A, B, C) -> X. 
+- `parallel::Bool = true`: Use the multithreaded implementation.
+"""
+function fun2m(f, A, B, C; delta::Float64 = 0.05, method::Algorithm = Diag, bs::Union{Nothing, Int64} = nothing, 
+               min_digits::Int64 = 0, strategy::String = "balanced", user_function = nothing, parallel::Bool = true)
 	
 	info = Fun2MInfo(nothing, nothing, nothing, nothing, nothing, nothing, nothing, nothing, nothing);
 	
@@ -243,8 +259,8 @@ function fun2m(f, A, B, C; delta = 0.05, method::Algorithm = Diag, bs::Union{Not
 		return;
 	end
 
-  t1 = Threads.@spawn fun2m_preprocessing(A, delta, method, bs)
-  t2 = Threads.@spawn fun2m_preprocessing(B, delta, method, bs)
+  t1 = Threads.@spawn fun2m_preprocessing(A, delta, method, bs, strategy)
+  t2 = Threads.@spawn fun2m_preprocessing(B, delta, method, bs, strategy)
 	
   UA, TA, treeA, info.nblocksA = fetch(t1)
   UB, TB, treeB, info.nblocksB = fetch(t2)

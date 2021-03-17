@@ -23,3 +23,17 @@ function. Unless the method based on Taylor expansions is specifically
 chosen by setting the optional parameter ```method = BivMatFun.Taylor```, 
 the ```(i,j)``` parameters can be ignored, as they will always be equal 
 to ```(0,0)```· 
+
+## Tests
+
+You may run all the tests, which repeat the experiments included in [1].
+In order to do that, run the following commands (as above, in `pkg` mode, which can be
+enabled by typing `]`):
+```julia
+pkg> activate .
+pkg> test
+```
+
+## References
+
+[1] S. Massei, L. Robol, Recursive Block Diagonalization for evaluating bivariate functions of matrices, in preparation, 2021.

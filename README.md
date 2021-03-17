@@ -36,4 +36,4 @@ pkg> test
 
 ## References
 
-[1] S. Massei, L. Robol, Recursive Block Diagonalization for evaluating bivariate functions of matrices, in preparation, 2021.
+* S. Massei, L. Robol, _Recursive Block Diagonalization for evaluating bivariate functions of matrices_, in preparation, 2021.

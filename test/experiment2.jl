@@ -1,4 +1,3 @@
-using MatrixDepot;
 using BivMatFun;
 using BenchmarkTools;
 using Printf;
@@ -58,15 +57,15 @@ function run_test()
         XA = XA / opnorm(XA) + shift * I;
         XB = randn(n-k, n-k)
         XB = XB / opnorm(XB) + shift * I;
-        A = cat(matrixdepot("kahan", k), XA, dims = [1,2]);
-        B = cat(matrixdepot("kahan", k), XB, dims = [1,2]);
+        A = cat(kahan(k), XA, dims = [1,2]);
+        B = cat(kahan(k), XB, dims = [1,2]);
         
       elseif matrix_name == "smoke"
         A = schur(smoke(m)).T;
         B = A;
         
       elseif matrix_name == "grcar-randn"
-        A = matrixdepot("grcar", m);
+        A = grcar(m);
         B = randn(n, n);
         
       elseif matrix_name == "lesp"
@@ -81,8 +80,8 @@ function run_test()
       elseif matrix_name == "sampling"
         k = min(32, min(m,n));
 
-        A = matrixdepot(matrix_name, k) + I;
-        B = matrixdepot(matrix_name, k) + I;
+        A = sampling(k) + I;
+        B = sampling(k) + I;
 
         XA = randn(m-k, m-k)
         XA = XA / opnorm(XA) + shift * I;
@@ -91,10 +90,6 @@ function run_test()
 
         A = cat(A, XA, dims=[1,2])
         B = cat(B, XB, dims=[1,2])
-        
-      else
-        A = matrixdepot(matrix_name, m);
-        B = matrixdepot(matrix_name, n);
       end
       
       A = complex(A);
@@ -134,9 +129,9 @@ function run_test()
       writedlm("experiment2.dat", data, '\t');
 
       @printf("%s: %s: |X - Y|/|Y|: %e (nblocks = %d, %d, time = %fs, digits = %d); errest = %e\n", 
-        fname, matrix_name, norm(X - Y) / norm(Y), info.nblocksA, info.nblocksB, tsp, info.digits, errest);
-      @printf("%s: %s: |Y2 - Y| / |Y|: %e, time = %fs\n", fname, matrix_name, norm(Y2 - Y) / norm(Y), tdiagm)
-      @printf("%s: %s: |XD - Y|/|Y|: %e, time = %fs\n", fname, matrix_name, norm(XD - Y) / norm(Y), tdiag);
+        fname, matrix_name, Float64(norm(X - Y) / norm(Y)), info.nblocksA, info.nblocksB, tsp, info.digits, errest);
+      @printf("%s: %s: |Y2 - Y| / |Y|: %e, time = %fs\n", fname, matrix_name, Float64(norm(Y2 - Y) / norm(Y)), tdiagm)
+      @printf("%s: %s: |XD - Y|/|Y|: %e, time = %fs\n", fname, matrix_name, Float64(norm(XD - Y) / norm(Y)), tdiag);
     end
     
   end

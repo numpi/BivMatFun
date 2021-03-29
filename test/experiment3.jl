@@ -61,8 +61,8 @@ function run_test()
 
       # @btime BivMatFun.diag_fun($f, $A, $B, $C);
       reshp = 0.0 # norm(F - FF) / norm(FF)
-      res = norm(F - F2) / norm(F) # norm(FF - F2) / norm(FF);
-      res2 = norm(F - XD) / norm(F) # norm(XD - FF) / norm(FF)
+      res = Float64(norm(F - F2) / norm(F)) # norm(FF - F2) / norm(FF);
+      res2 = Float64(norm(F - XD) / norm(F)) # norm(XD - FF) / norm(FF)
 
       @printf("n = %d\n", n)
       @printf("DIAG_HP: time = %f, res = %e, nblocks = %d, %d\n", thp, reshp, info.nblocksA, info.nblocksB)

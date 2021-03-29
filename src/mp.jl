@@ -31,7 +31,17 @@ if use_arb
     return convert(ArbFloat{digits}, x)
   end
 
+  function with_digits(fun, digits)
+    return fun();
+  end
+
 else
+
+  function with_digits(fun, digits)
+    setprecision(bits_for_digits(digits)) do 
+      return fun();
+    end
+  end
 
   function mp(A::Array{T, N}, digits::Int64) where {T <: Complex, N}
     setprecision(bits_for_digits(digits)) do

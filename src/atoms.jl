@@ -139,11 +139,14 @@ function trim_diagpertub!(VA, DA, VB, DB, C, fun, d_uh)
     DA = convert(Array{ComplexF64}, DA)
     DB = convert(Array{ComplexF64}, DB)
   else
-    VA = UpperTriangular(mp(VA, d_uh))
-    VB = UpperTriangular(mp(VB, d_uh))
-    DA = mp(DA, d_uh)
-    DB = mp(DB, d_uh)
-    C = mp(C, d_uh)
+    (VA, VB, DA, DB, C) = with_digits(d_uh) do
+      VA = UpperTriangular(mp(VA, d_uh))
+      VB = UpperTriangular(mp(VB, d_uh))
+      DA = mp(DA, d_uh)
+      DB = mp(DB, d_uh)
+      C = mp(C, d_uh)
+      return VA, VB, DA, DB, C;
+    end
   end
 
   C = VA \ C * VB;

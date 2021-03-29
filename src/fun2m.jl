@@ -36,8 +36,10 @@ function build_eigendecomp_tree!(T::BivMatTree, maxkV::Float64, A::Union{Matrix{
 
         T.kV = estimate_condeig(T.V)
       else
-        (T.D, T.V) = eigentri(T.Ttilde);
-        T.kV = cond(T.V)
+        with_digits(d_uh) do
+          (T.D, T.V) = eigentri(T.Ttilde);
+          T.kV = cond(T.V)
+        end
 		  end
 	else
 		build_eigendecomp_tree!(T.A11, maxkV, A, meth, use_mp);

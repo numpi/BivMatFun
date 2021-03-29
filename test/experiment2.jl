@@ -118,11 +118,6 @@ function run_test()
       tsp = @benchmark fun2m($f, $A, $B, $C, method = BivMatFun.Diag);
       tsp = median(tsp.times) / 1e9;
       
-      @printf("%s: %s: |X - Y|/|Y|: %e (nblocks = %d, %d, time = %fs, digits = %d); errest = %e\n", 
-        fname, matrix_name, norm(X - Y) / norm(Y), info.nblocksA, info.nblocksB, tsp, info.digits, errest);
-      @printf("%s: %s: |Y2 - Y| / |Y|: %e, time = %fs\n", fname, matrix_name, norm(Y2 - Y) / norm(Y), tdiagm)
-      @printf("%s: %s: |XD - Y|/|Y|: %e, time = %fs\n", fname, matrix_name, norm(XD - Y) / norm(Y), tdiag);
-      
       #% err_fun2m, err_diag, time_fun2m, time_diag, time_diagm, nblocksA, nblocksB, d_fun2m, d_fundiagm, errest
       data[i, j, 1] = norm(X - Y) / norm(Y);
       data[i, j, 2] = norm(XD - Y) / norm(Y);
@@ -137,6 +132,11 @@ function run_test()
       data[i, j, 11] = errest;
 
       writedlm("experiment2.dat", data, '\t');
+
+      @printf("%s: %s: |X - Y|/|Y|: %e (nblocks = %d, %d, time = %fs, digits = %d); errest = %e\n", 
+        fname, matrix_name, norm(X - Y) / norm(Y), info.nblocksA, info.nblocksB, tsp, info.digits, errest);
+      @printf("%s: %s: |Y2 - Y| / |Y|: %e, time = %fs\n", fname, matrix_name, norm(Y2 - Y) / norm(Y), tdiagm)
+      @printf("%s: %s: |XD - Y|/|Y|: %e, time = %fs\n", fname, matrix_name, norm(XD - Y) / norm(Y), tdiag);
     end
     
   end

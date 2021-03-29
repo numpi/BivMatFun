@@ -38,32 +38,32 @@ if use_arb
 else
 
   function with_digits(fun, digits)
-    setprecision(bits_for_digits(digits)) do 
+    MPFR_TLS.setprecision(bits_for_digits(digits)) do 
       return fun();
     end
   end
 
   function mp(A::Array{T, N}, digits::Int64) where {T <: Complex, N}
-    setprecision(bits_for_digits(digits)) do
-      return convert(Array{Complex{BigFloat}, N}, A)
+    MPFR_TLS.setprecision(bits_for_digits(digits)) do
+      return convert(Array{Complex{MPFR_TLS.BigFloat}, N}, A)
     end
   end
 
   function mp(x::T, digits::Int64) where T <: Complex
-    setprecision(bits_for_digits(digits)) do
-      return convert(Complex{BigFloat}, x)
+    MPFR_TLS.setprecision(bits_for_digits(digits)) do
+      return convert(Complex{MPFR_TLS.BigFloat}, x)
     end
   end
 
   function mp(A::Array{T, N}, digits::Int64) where {T <: AbstractFloat, N}
-    setprecision(bits_for_digits(digits)) do
-      return convert(Array{BigFloat, N}, A)
+    MPFR_TLS.setprecision(bits_for_digits(digits)) do
+      return convert(Array{MPFR_TLS.BigFloat, N}, A)
     end
   end
 
   function mp(x::T, digits::Int64) where T <: AbstractFloat
-    setprecision(bits_for_digits(digits)) do
-      return convert(BigFloat, x)
+    MPFR_TLS.setprecision(bits_for_digits(digits)) do
+      return convert(MPFR_TLS.BigFloat, x)
     end
   end
 

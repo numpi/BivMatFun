@@ -3,6 +3,7 @@ module BivMatFun
 export fun2m
 
 include("types.jl")
+include("mpfr_tls.jl")
 include("mp.jl")
 include("utils.jl")
 

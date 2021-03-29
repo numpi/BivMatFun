@@ -138,23 +138,29 @@ function trim_diagpertub!(VA, DA, VB, DB, C, fun, d_uh)
     C  = convert(Matrix{ComplexF64}, C)
     DA = convert(Array{ComplexF64}, DA)
     DB = convert(Array{ComplexF64}, DB)
+
+    C = VA \ C * VB;  
+    diag_fun!(fun, DA, DB, C)
+
+    C = VA * C / VB  
   else
-    (VA, VB, DA, DB, C) = with_digits(d_uh) do
+    C = with_digits(d_uh) do
       VA = UpperTriangular(mp(VA, d_uh))
       VB = UpperTriangular(mp(VB, d_uh))
       DA = mp(DA, d_uh)
       DB = mp(DB, d_uh)
       C = mp(C, d_uh)
-      return VA, VB, DA, DB, C;
+
+      C = VA \ C * VB;  
+      diag_fun!(fun, DA, DB, C)
+    
+      C = VA * C / VB  
+
+      C = convert(Matrix{ComplexF64}, C);
+
+      return C;
     end
   end
-
-  C = VA \ C * VB;
-  
-  diag_fun!(fun, DA, DB, C)
-
-  C = VA * C / VB  
-  C = convert(Matrix{ComplexF64}, C);
 
 	return C, d_uh
 end

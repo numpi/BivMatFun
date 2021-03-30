@@ -67,6 +67,10 @@ function run_test()
       elseif matrix_name == "grcar-randn"
         A = grcar(m);
         B = randn(n, n);
+
+      elseif matrix_name == "grcar"
+        A = grcar(m);
+        B = grcar(n);
         
       elseif matrix_name == "lesp"
         k = min(32, min(m,n));

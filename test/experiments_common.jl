@@ -33,13 +33,8 @@ function sampling(::Type{T}, x::Vector) where T
   A = A + diagm(0 => d[:])
   return A
 end
-function grcar(::Type{T}, n::Integer, k::Integer = 3) where T
-  # Compute grcar matrix
-  G = tril(triu(ones(T, n,n)), min(k, n-1)) - diagm(-1 => ones(T, n-1))
-  return G
-end
-grcar(args...) = grcar(Float64, args...)
-grcar(::Type, args...) = throw(MethodError(grcar, Tuple(args)))
+sampling(args...) = sampling(Float64, args...)
+sampling(::Type, args...) = throw(MethodError(sampling, Tuple(args)))
 
 function grcar(::Type{T}, n::Integer, k::Integer = 3) where T
   # Compute grcar matrix

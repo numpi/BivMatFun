@@ -57,10 +57,9 @@ function condeigvec(TA)
   # too small to be added by T in precision u
   d_default = 48; # precision with unit roundoff u^2
   
-  # TAtilde = mp(TA) + mp(EA);
-  # TAtilde = convert(Matrix{ArbComplex{b_defaults}}, TA) +
-  # convert(Matrix{ArbComplex{b_defaults}}, EA)
-  TAtilde = mp(TA, d_default) + mp(EA, d_default)
+  TAtilde = with_digits(d_uh) do
+    mp(TA, d_default) + mp(EA, d_default)
+  end
   
   # Calculate the largest group size k
   ordA = blocking(convert(Matrix{ComplexF64}, TAtilde),delta1);

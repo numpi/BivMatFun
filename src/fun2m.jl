@@ -47,11 +47,12 @@ function build_eigendecomp_tree!(T::BivMatTree, maxkV::Float64, A::Union{Matrix{
 		d_uh = convert(Int64, max(32, ceil(log10(1 / uh))));
 		
       if use_mp
-        T1 = mp(T.Ttilde, d_uh)
-        # FIXME: Need to handle the 2x2 blocks in the real Schur form
-        (T.D, T.V) = eigentri(T1);
-
-        T.kV = estimate_condeig(T.V)
+        with_digits(d_uh) do
+          T1 = mp(T.Ttilde, d_uh)
+          # FIXME: Need to handle the 2x2 blocks in the real Schur form
+          (T.D, T.V) = eigentri(T1);
+          T.kV = estimate_condeig(T.V)
+        end
       else
         (T.D, T.V) = eigentri(T.Ttilde);
         T.kV = cond(T.V)

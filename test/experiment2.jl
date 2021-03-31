@@ -15,10 +15,10 @@ function run_test()
   a = .5;
   
   fncts = [
-  Dict("name" => "sqrt", "f" => (x,y,i,j) -> sqrt(x+y)), 
-  Dict("name" => "invsqrt", "f" => (x,y,i,j)  -> 1 ./ sqrt(x+y)),
-  Dict("name" => "phi1", "f" => (x,y,i,j) -> expm1(x+y) ./ (x+y)), 
-  Dict("name" => "expa", "f" => (x,y,i,j) -> exp((x+y).^a))
+    Dict("name" => "sqrt", "f" => (x,y,i,j) -> sqrt(x+y)), 
+    Dict("name" => "invsqrt", "f" => (x,y,i,j)  -> 1 ./ sqrt(x+y)),
+    Dict("name" => "phi1", "f" => (x,y,i,j) -> expm1(x+y) ./ (x+y)), 
+    Dict("name" => "expa", "f" => (x,y,i,j) -> exp((x+y).^a))
   ]
 
   shift = 1.00;

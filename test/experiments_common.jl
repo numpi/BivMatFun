@@ -33,6 +33,10 @@ function sampling(::Type{T}, x::Vector) where T
   A = A + diagm(0 => d[:])
   return A
 end
+function sampling(::Type{T}, n::Integer) where T
+  p = T[1:n;] / n
+  return sampling(T, p)
+end
 sampling(args...) = sampling(Float64, args...)
 sampling(::Type, args...) = throw(MethodError(sampling, Tuple(args)))
 

@@ -80,19 +80,13 @@ end
 
 
 #----------------------------------- Auxiliary functions-----------------------------------
-function fun2m_atom(f, A::Matrix, B::Matrix, C::Matrix, treeA::BivMatTree, treeB::BivMatTree, meth::Algorithm, min_digits::Int64, user_function = nothing)
-    # [F, digits] =
-    #FUN2M_ATOM  Bivariate function of triangular coefficients with nearly constant diagonals.
-    #   F = FUNM_ATOM(A, B, C, FUN,  MAXTERMS)
-    #   applies the function FUN at the upper triangular matrices A,B on C
-    #   where A and B have nearly constant diagonals.
-    #   A bivariate Taylor series is used, taking MAXTERMS^2 terms.
-    #   The function represented by FUN must have a Taylor series with an
-    #   infinite radius of convergence.
-    #   FUN(X,Y,K,H) must return the (K,H)-th derivative of
-    #   the function represented by FUN evaluated at (X,Y).
-    #   N_TERMS^2 is the number of terms taken in the Taylor series.
-    
+
+"""
+    fun2m_atom(f, A::Matrix, B::Matrix, C::Matrix, treeA::BivMatTree, treeB::BivMatTree, meth::Algoroithm, min_digits::Int64, user_function = nothing)
+
+    Bivariate function of triangular coefficients with nearly constant diagonals.
+"""
+function fun2m_atom(f, A::Matrix, B::Matrix, C::Matrix, treeA::BivMatTree, treeB::BivMatTree, meth::Algorithm, min_digits::Int64, user_function = nothing)    
     digits = 0;
     
     nA = size(A, 1); nB = size(B, 1);
@@ -103,7 +97,7 @@ function fun2m_atom(f, A::Matrix, B::Matrix, C::Matrix, treeA::BivMatTree, treeB
         uh = eps() / treeA.kV / treeB.kV;
         d_uh = convert(Int64, max(ceil(log10(1 / uh)), min_digits));
         
-        F, digits = trim_diagpertub(treeA.V, treeA.D, treeB.V, treeB.D, C, f, d_uh);
+        F, digits = fun2m_atom_pad(treeA.V, treeA.D, treeB.V, treeB.D, C, f, d_uh);
     elseif meth == DiagNoHp # diagonalization without high precision
         VA = treeA.V; DA = treeA.D;
         VB = treeB.V; DB = treeB.D;
@@ -117,20 +111,31 @@ function fun2m_atom(f, A::Matrix, B::Matrix, C::Matrix, treeA::BivMatTree, treeB
     return F, digits;
 end
 
-function trim_diagpertub(VA, DA, VB, DB, C, fun, d_uh)
+
+"""
+    fun2m_atom_pad!(VA, DA, VB, DB, C, fun, d_uh)
+
+    Multiprecision perturb-and-diagonalize for evaluating bivariate 
+    functions of matrices f{A, B^T}(C) for upper triangular A, B; it
+    is expected that the eigenvector basis and the eigenvalues are 
+    precomputed in VA, DA, VB, DB. 
+"""
+function fun2m_atom_pad(VA, DA, VB, DB, C, fun, d_uh)
     F = copy(C)
-    F, d_uh = trim_diagpertub!(VA, DA, VB, DB, F, fun, d_uh)
+    F, d_uh = fun2m_atom_pad!(VA, DA, VB, DB, F, fun, d_uh)
 end
 
-function trim_diagpertub!(VA, DA, VB, DB, C, fun, d_uh)
-    #TRIM_DIAGPERTUB Compute general matrix function of a triangular matrix.
-    #   TRIM_DIAGPERTUB(TA, TB, C, fun) evaluates the function_handle fun at the
-    #   triangular matrices TA and TB.
-    #   The algorithm computes the function represented by fun
-    #   using randomized approximate
-    #   diagonalization with a diagonal perturbation.
-    #   d_uh returns equivalent decimal digits of the
-    #   possibly higher than u^2 precision.
+"""
+    fun2m_atom_pad!(VA, DA, VB, DB, C, fun, d_uh)
+
+    Multiprecision perturb-and-diagonalize for evaluating bivariate 
+    functions of matrices f{A, B^T}(C) for upper triangular A, B; it
+    is expected that the eigenvector basis and the eigenvalues are 
+    precomputed in VA, DA, VB, DB. 
+
+    The evaluation is performed in-place, overwriting C. 
+"""
+function fun2m_atom_pad!(VA, DA, VB, DB, C, fun, d_uh)
     
     if d_uh <= 18
         VA = UpperTriangular(convert(Matrix{ComplexF64}, VA))
@@ -152,13 +157,10 @@ function trim_diagpertub!(VA, DA, VB, DB, C, fun, d_uh)
             C = mp(C, d_uh)
             
             C = VA \ C * VB;  
-            diag_fun!(fun, DA, DB, C)
-            
+            diag_fun!(fun, DA, DB, C)            
             C = VA * C / VB  
             
-            C = convert(Matrix{ComplexF64}, C);
-            
-            return C;
+            convert(Matrix{ComplexF64}, C);
         end
     end
     

@@ -4,7 +4,6 @@ using SpecialFunctions;
 using Printf;
 using BenchmarkTools;
 using DelimitedFiles;
-using MAT;
 
 include("experiments_common.jl");
 

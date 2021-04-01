@@ -9,7 +9,7 @@ jobs:
       matrix:
         julia-version: ['1.5', '1.6', 'nightly' ]
         julia-arch: [x64, x86]
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest]
     env:
       JULIA_NUM_THREADS: 4
       BIVMATFUN_CI: true

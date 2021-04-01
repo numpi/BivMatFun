@@ -165,5 +165,5 @@ function generate_test_2()
     end
 end
 
-# generate_test_1()
+generate_test_1()
 generate_test_2()

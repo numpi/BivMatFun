@@ -13,7 +13,14 @@ f = (x,y,i,j) -> 1 ./ (x-y) ./ sqrt(x+y);
 
 Random.seed!(123);
 
-function run_test()\
+function run_test()
+
+    if is_ci_test()
+      # We skip this test in the the CI pipeline, as it does perform 
+      # any sanity check, it's only meant to test performances. 
+      return true;
+    end
+
     success = true;
     ntests = 7;
     data = zeros(ntests, 6);

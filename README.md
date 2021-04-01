@@ -35,9 +35,11 @@ pkg> activate .
 pkg> test
 ```
 Please note that the tests run the solver several times for getting accurate
-timings, and compute the reference solution using high precision arithmetic. 
-The latter operation is quite computationally demanding, so they may require 
-several minutes to complete. 
+timings, and use reference solutions precomputed using high precision 
+arithmetic. If you wish, these can be regenerated using the script 
+```test/construct_test_cases.jl```. The latter operation is 
+computationally demanding, so it may require several minutes to 
+an hour to complete. 
 
 ## References
 

@@ -23,20 +23,29 @@ function run_test(use_grcar = false)
   for i = 1 : ntests
     n = 32 * i;
 
-    A, B, C, Y = construct_random_benchmark(f, n)
-    errest1 = BivMatFun.fun2m_condest(f, A, B, C) * eps();
+    vars = matread("$(data_directory)/experiment1_$(n)_random.mat")
+    A = vars["A"]; B = vars["B"]; C = vars["C"]; Y = vars["Y"]; errest1 = vars["errest"]
 
     @printf("n = %d, A,B,C random\n", n);
 
     XD, infod = fun2m(f, A, B, C, method = BivMatFun.Diag);
-    tdiag = @benchmark fun2m($f, $A, $B, $C, method = $BivMatFun.Diag);
-    tdiag = median(tdiag.times) / 1e9
+    if ! is_ci_test()
+      tdiag = @benchmark fun2m($f, $A, $B, $C, method = $BivMatFun.Diag);
+      tdiag = median(tdiag.times) / 1e9
+    else
+      tdiag = 0.0
+    end
 
     @printf("  Diag: err = %e, nblocks = %d %d, max digits = %d, time = %f, errest = %e\n", norm(XD - Y) / norm(Y), infod.nblocksA, infod.nblocksB, infod.digits, tdiag, errest1);  
 
     XT, infot = fun2m(f, A, B, C, method = BivMatFun.Taylor);
-    tt = @benchmark fun2m($f, $A, $B, $C, method = $BivMatFun.Taylor);
-    tt = median(tt.times) / 1e9;
+
+    if ! is_ci_test()
+      tt = @benchmark fun2m($f, $A, $B, $C, method = $BivMatFun.Taylor);
+      tt = median(tt.times) / 1e9;
+    else
+      tt = 0.0
+    end
 
     @printf("  Taylor: err = %e, nblocks = %d %d, max deg = %d, time = %f, errest = %e\n", norm(XT - Y) / norm(Y), infot.nblocksA, infot.nblocksB, infot.digits, tt, errest1);
 
@@ -44,28 +53,32 @@ function run_test(use_grcar = false)
     success &= norm(XT - Y) / norm(Y) < errest1 * 100;
 
     # GRCAR
-    A = grcar(n) + I
-    
-    A = convert(Matrix{ComplexF64}, A)
-    B = convert(Matrix{ComplexF64}, B)
-    C = convert(Matrix{ComplexF64}, C)
-
-    Y2 = evaluate_reference_solution(f, A, B, C)
-    errest2 = BivMatFun.fun2m_condest(f, A, B, C) * eps();
+    vars = matread("$(data_directory)/experiment1_$(n)_grcar.mat")
+    A = vars["A"]; B = vars["B"]; C = vars["C"]; Y2 = vars["Y"]; errest2 = vars["errest"]
 
     @printf("n = %d, A grcar, B,C random\n", n);
 
     XD2, infod2 = fun2m(f, A, B, C, method = BivMatFun.Diag);
-    tdiag2 = @benchmark fun2m($f, $A, $B, $C, method = $BivMatFun.Diag);
-    tdiag2 = median(tdiag2.times) / 1e9;
+
+    if ! is_ci_test()
+      tdiag2 = @benchmark fun2m($f, $A, $B, $C, method = $BivMatFun.Diag);
+      tdiag2 = median(tdiag2.times) / 1e9;
+    else
+      tdiag2 = 0.0
+    end
 
     @printf("  Diag: err = %e, nblocks = %d %d, max digits = %d, time = %f, errest = %e\n", Float64(norm(XD2 - Y2) / norm(Y2)), infod2.nblocksA, infod2.nblocksB, infod2.digits, tdiag2, errest2);  
 
     BivMatFun.warnings(false);
     XT2, infot2 = fun2m(f, A, B, C, method = BivMatFun.Taylor);
-    tt2 = @benchmark fun2m($f, $A, $B, $C, method = $BivMatFun.Taylor);
+    if ! is_ci_test()
+      tt2 = @benchmark fun2m($f, $A, $B, $C, method = $BivMatFun.Taylor);
+      tt2 = median(tt2.times) / 1e9;
+    else
+      tt2 = 0.0
+    end
+
     BivMatFun.warnings(true);
-    tt2 = median(tt2.times) / 1e9;
 
     @printf("  Taylor: err = %e, nblocks = %d %d, max deg = %d, time = %f, errest = %e\n", Float64(norm(XT2 - Y2) / norm(Y2)), infot2.nblocksA, infot2.nblocksB, infot2.digits, tt2, errest2);  
 

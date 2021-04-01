@@ -3,6 +3,7 @@ using BenchmarkTools;
 using Printf;
 using LinearAlgebra;
 using DelimitedFiles;
+using MAT;
 
 include("experiments_common.jl")
 
@@ -37,87 +38,34 @@ function run_test()
       
       fname = fncts[i]["name"];
       f = fncts[i]["f"];
-      
-      if matrix_name == "jordbloc1"
-        k = min(m, n, 8);
-        
-        J = diagm(1 => ones(k-1)) + 0.1 * I;
-        
-        A = randn(m-k, m-k); A = A / opnorm(A); A = A + shift * I;
-        A = cat(J, A, dims=[1,2]);
-        Q = qr(randn(m, m)).Q;
-        A = Q * A * Q';
-        
-        B = randn(n-k, n-k); B = B / opnorm(B); B = B + shift * I;
-        B = cat(J, B, dims=[1,2]);
-        Q = qr(randn(m, m)).Q;
-        B = Q * B * Q';
-        
-      elseif matrix_name == "kahan2"
-        k = min(min(m,n), 64);
-        XA = randn(m-k, m-k)
-        XA = XA / opnorm(XA) + shift * I;
-        XB = randn(n-k, n-k)
-        XB = XB / opnorm(XB) + shift * I;
-        A = cat(kahan(k), XA, dims = [1,2]);
-        B = cat(kahan(k), XB, dims = [1,2]);
-        
-      elseif matrix_name == "smoke"
-        A = schur(smoke(m)).T;
-        B = A;
-        
-      elseif matrix_name == "grcar-randn"
-        A = grcar(m);
-        B = randn(n, n);
 
-      elseif matrix_name == "grcar"
-        A = grcar(m);
-        B = grcar(n);
-        
-      elseif matrix_name == "lesp"
-        k = min(32, min(m,n));
-        XA = randn(m-k, m-k)
-        XA = XA / opnorm(XA) - shift * I;
-        XB = randn(n-k, n-k)
-        XB = XB / opnorm(XB) - shift * I;
-        A = -cat(schur(lesp(k)).T, XA, dims = [1,2]);
-        B = -cat(schur(lesp(k)).T, XB, dims = [1,2]);
-
-      elseif matrix_name == "sampling"
-        k = min(32, min(m,n));
-
-        A = sampling(k) + I;
-        B = sampling(k) + I;
-
-        XA = randn(m-k, m-k)
-        XA = XA / opnorm(XA) + shift * I;
-        XB = randn(n-k, n-k)
-        XB = XB / opnorm(XB) + shift * I;
-
-        A = cat(A, XA, dims=[1,2])
-        B = cat(B, XB, dims=[1,2])
-      end
-      
-      A = complex(A);
-      B = complex(B)
-      
-      C = randn(m, n); C = C / norm(C);
-      C = complex(C)
-
-      Y = evaluate_reference_solution(f, A, B, C)
-      errest = BivMatFun.fun2m_condest(f, A, B, C) * eps();
+      vars = matread("$(data_directory)/experiment2_$(matrix_name)_$(fname).mat")
+      A = vars["A"]; B = vars["B"]; C = vars["C"]; Y = vars["Y"]; errest = vars["errest"]
 
       Y2, infom = fun2m(f, A, B, C, method = BivMatFun.Diag, bs = max(m,n));
-      tdiagm = @benchmark fun2m($f, $A, $B, $C, method = $BivMatFun.Diag, bs = $max($m, $n))
-      tdiagm = median(tdiagm.times) / 1e9;
+
+      if ! is_ci_test()
+        tdiagm = @benchmark fun2m($f, $A, $B, $C, method = $BivMatFun.Diag, bs = $max($m, $n))
+        tdiagm = median(tdiagm.times) / 1e9;
+      else
+        tdiagm = 0.0
+      end
             
       XD = BivMatFun.diag_fun(f, A, B, C);
-      tdiag = @benchmark BivMatFun.diag_fun($f, $A, $B, $C)
-      tdiag = median(tdiag.times) / 1e9;
+      if ! is_ci_test()
+        tdiag = @benchmark BivMatFun.diag_fun($f, $A, $B, $C)
+        tdiag = median(tdiag.times) / 1e9;
+      else
+        tdiag = 0.0
+      end
       
       X, info = fun2m(f, A, B, C, method = BivMatFun.Diag);
-      tsp = @benchmark fun2m($f, $A, $B, $C, method = BivMatFun.Diag);
-      tsp = median(tsp.times) / 1e9;
+      if ! is_ci_test()
+        tsp = @benchmark fun2m($f, $A, $B, $C, method = BivMatFun.Diag);
+        tsp = median(tsp.times) / 1e9;
+      else
+        tsp = 0.0
+      end
       
       #% err_fun2m, err_diag, time_fun2m, time_diag, time_diagm, nblocksA, nblocksB, d_fun2m, d_fundiagm, errest
       data[i, j, 1] = norm(X - Y) / norm(Y);

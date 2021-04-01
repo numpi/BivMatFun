@@ -2,6 +2,12 @@ using GenericSchur;
 using BivMatFun;
 import BivMatFun.mp;
 
+const data_directory = string(@__DIR__(), "/data")
+
+function is_ci_test()
+  return haskey(ENV, "BIVMATFUN_CI")
+end
+
 function kahan(::Type{T}, m::Integer, n::Integer, theta, pert) where T
   theta = convert(T, theta)
   pert = convert(T, pert)
@@ -89,6 +95,6 @@ function evaluate_reference_solution(f, A, B, C)
     TB = FB.T + diagm(randn(size(FB.T, 1))) * ep * norm(FB.T, Inf);
     Y = BivMatFun.diag_fun(f, TA, TB, C);
 
-    return FA.Z * Y * FB.Z';
+    return convert(Matrix{Complex{Float64}}, FA.Z * Y * FB.Z');
   end
 end

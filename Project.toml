@@ -4,6 +4,5 @@ authors = ["Leonardo Robol <leo@robol.it>", "Stefano Massei <s.massei@tue.nl>"]
 version = "0.1.0"
 
 [deps]
-ArbNumerics = "7e558dbc-694d-5a72-987c-6f4ebed21442"
 GenericSchur = "c145ed77-6b09-5dd9-b285-bf645a82121e"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"

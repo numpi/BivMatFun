@@ -1,5 +1,5 @@
 # BivMatFun
-![Tests](https://github.com/numpi/BivMatFun/actions/workflows/runtests.yml/badge.svg)
+[![tests](https://github.com/numpi/BivMatFun/actions/workflows/runtests.yml/badge.svg)](https://github.com/numpi/BivMatFun/actions/workflows/runtests.yml)
 
 ```BivMatFun``` is a Julia package to evaluate bivariate-matrix functions. 
 To install the package into your Julia environment you may run:

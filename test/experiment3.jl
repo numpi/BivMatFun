@@ -13,12 +13,10 @@ f = (x,y,i,j) -> 1 ./ (x-y) ./ sqrt(x+y);
 
 Random.seed!(123);
 
-
-function run_test()
+function run_test()\
+    success = true;
     ntests = 7;
-
-    # (ntest, method, f) => f ∈ (time, blocksA, blocksB, res)
-    data = zeros(ntests, 3, 4);
+    data = zeros(ntests, 6);
 
     # Set this to false to disable timings
     check_times = true;
@@ -61,20 +59,24 @@ function run_test()
 
       # @btime BivMatFun.diag_fun($f, $A, $B, $C);
       reshp = 0.0 # norm(F - FF) / norm(FF)
-      res = Float64(norm(F - F2) / norm(F)) # norm(FF - F2) / norm(FF);
-      res2 = Float64(norm(F - XD) / norm(F)) # norm(XD - FF) / norm(FF)
+      res = norm(F - F2) / norm(F) # norm(FF - F2) / norm(FF);
+      res2 = norm(F - XD) / norm(F) # norm(XD - FF) / norm(FF)
 
       @printf("n = %d\n", n)
       @printf("DIAG_HP: time = %f, res = %e, nblocks = %d, %d\n", thp, reshp, info.nblocksA, info.nblocksB)
       @printf("DIAG_NOHP time = %f, Residual: %e, nblocks = %d, %d\n", tnohp, res, info2.nblocksA, info2.nblocksB);
       @printf("DIAG time = %f, Residual: %e\n", tdiag, res2);
 
-      data[i, 1, 1:4] = [ thp, info.nblocksA, info.nblocksB, reshp ]
-      data[i, 2, 1:4] = [ tnohp, info2.nblocksA, info2.nblocksB, res ]
-      data[i, 3, 1:4] = [ tdiag, 0, 0, res2 ]
+      # data[i, 1, 1:4] = [ thp, info.nblocksA, info.nblocksB, reshp ]
+      # data[i, 2, 1:4] = [ tnohp, info2.nblocksA, info2.nblocksB, res ]
+      # data[i, 3, 1:4] = [ tdiag, 0, 0, res2 ]
 
-      writedlm("experiment3.dat", data, '\t')
+      data[i, 1:6] = [ n, thp, tnohp, tdiag, info.nblocksA, info.nblocksB ]
+
+      writedlm("exp3.dat", data, '\t')
     end
+
+    return success;
 
 end
 

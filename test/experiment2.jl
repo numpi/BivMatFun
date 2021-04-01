@@ -7,6 +7,8 @@ using DelimitedFiles;
 include("experiments_common.jl")
 
 function run_test() 
+
+  success = true;
   
   matrices = [ "jordbloc1", "grcar", "smoke", "kahan2", "lesp", "sampling", "grcar-randn" ];
   
@@ -130,15 +132,26 @@ function run_test()
       data[i, j, 10] = infom.digits;
       data[i, j, 11] = errest;
 
-      writedlm("experiment2.dat", data, '\t');
+      # In these tests, it is expected that fun2m with Diag should work in all cases, and that 
+      # the method using Taylor may fail. Hence, we only check if the residue is sufficiently
+      # for the case with Diag; we allow some tolerance, because the error estimate is rather 
+      # rough.
+      success &= data[i, j, 1] < errest * 1e2;
+
+      # writedlm("experiment2.dat", data, '\t');
 
       @printf("%s: %s: |X - Y|/|Y|: %e (nblocks = %d, %d, time = %fs, digits = %d); errest = %e\n", 
-        fname, matrix_name, Float64(norm(X - Y) / norm(Y)), info.nblocksA, info.nblocksB, tsp, info.digits, errest);
-      @printf("%s: %s: |Y2 - Y| / |Y|: %e, time = %fs\n", fname, matrix_name, Float64(norm(Y2 - Y) / norm(Y)), tdiagm)
-      @printf("%s: %s: |XD - Y|/|Y|: %e, time = %fs\n", fname, matrix_name, Float64(norm(XD - Y) / norm(Y)), tdiag);
+        fname, matrix_name, norm(X - Y) / norm(Y), info.nblocksA, info.nblocksB, tsp, info.digits, errest);
+      @printf("%s: %s: |Y2 - Y| / |Y|: %e, time = %fs\n", fname, matrix_name, norm(Y2 - Y) / norm(Y), tdiagm)
+      @printf("%s: %s: |XD - Y|/|Y|: %e, time = %fs\n", fname, matrix_name, norm(XD - Y) / norm(Y), tdiag);
     end
-    
+
+    # We format the data in a way that is easier to handle and ready to include 
+    # in the paper TeX files. 
+    writedlm("exp2-$i.dat", data[i,:,:], '\t')
   end
+
+  return success;
   
 end
 

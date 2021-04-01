@@ -41,6 +41,7 @@ function run_test(use_grcar = false)
     @printf("  Taylor: err = %e, nblocks = %d %d, max deg = %d, time = %f, errest = %e\n", norm(XT - Y) / norm(Y), infot.nblocksA, infot.nblocksB, infot.digits, tt, errest1);
 
     success &= norm(XD - Y) / norm(Y) < errest1 * 100;
+    success &= norm(XT - Y) / norm(Y) < errest1 * 100;
 
     # GRCAR
     A = grcar(n) + I
@@ -68,7 +69,9 @@ function run_test(use_grcar = false)
 
     @printf("  Taylor: err = %e, nblocks = %d %d, max deg = %d, time = %f, errest = %e\n", Float64(norm(XT2 - Y2) / norm(Y2)), infot2.nblocksA, infot2.nblocksB, infot2.digits, tt2, errest2);  
 
-
+    # For the GRCAR matrix, which involves a-posteriori re-blocking due to a 
+    # highly non-normal eigenvector matrix, we expect Taylor to fail, hence
+    # we do not check it. 
     success &= norm(XD2 - Y2) / norm(Y) < errest2 * 100;
 
     #

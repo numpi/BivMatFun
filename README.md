@@ -33,6 +33,10 @@ enabled by typing `]`):
 pkg> activate .
 pkg> test
 ```
+Please note that the tests run the solver several times for getting accurate
+timings, and compute the reference solution using high precision arithmetic. 
+The latter operation is quite computationally demanding, so they may require 
+several minutes to complete. 
 
 ## References
 

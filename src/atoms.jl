@@ -156,9 +156,13 @@ function fun2m_atom_pad!(VA, DA, VB, DB, C, fun, d_uh)
             DB = mp(DB, d_uh)
             C = mp(C, d_uh)
             
-            C = VA \ C * VB;  
+            C = VA \ C;
+            # C = bf_mldivide!(VA, C)
+            # C = C * VB;
+            C = bf_matmulr!(C, VB)
             diag_fun!(fun, DA, DB, C)            
-            C = VA * C / VB  
+            C = VA * C;
+            C = C / VB  
             
             convert(Matrix{ComplexF64}, C);
         end
@@ -166,6 +170,103 @@ function fun2m_atom_pad!(VA, DA, VB, DB, C, fun, d_uh)
     
     return C, d_uh
 end
+
+function bf_mldivide!(VA, C)
+    # In place C = VA \ C, with upper triangular VA, stored in C.
+    n = size(VA, 1)
+    m = size(C, 2)
+
+    for i = n : -1 : 1
+        for j = 1 : m
+            for k = i + 1 : n
+                C[i,j] = C[i,j] - VA[i,k] * C[k,j]
+            end
+            C[i,j] = C[i,j] / VA[i,i]
+        end
+    end
+
+    C
+end
+
+function bf_matmulr!(A, VB)
+    # In place matmul C = A*VB, with upper triangular VB, stored in A. 
+    m = size(A, 1);
+    n = size(A, 2);
+
+    for j = n : -1 : 1
+        for k = 1 : m
+            A[k, j] = A[k, j] * VB[j,j];
+        end
+
+        for i = j-1 : -1 : 1
+            for k = 1 : m
+                A[k, j] = A[k, j] + VB[i,j] * A[k, i];
+            end
+        end
+    end
+
+    A
+end
+
+
+# function bf_matmulr2!(A, VB)
+#     # In place matmul C = A*VB, with upper triangular VB, stored in A. 
+#     m = size(A, 1);
+#     n = size(A, 2);
+#     p = size(VB, 2);
+
+#     tmp = complex(MPFR_TLS.BigFloat());
+#     tmp1 = MPFR_TLS.BigFloat();
+#     tmp2 = MPFR_TLS.BigFloat();
+
+#     r = MPFR_TLS.ROUNDING_MODE[];
+
+#     for j = p : -1 : 1
+#         for k = 1 : m
+#             # A[k, j] = A[k, j] * VB[j,j];
+#             ccall((:mpfr_mul, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                 tmp1, real(VB[j,j]), real(A[k,j]) ,r);
+#             ccall((:mpfr_mul, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                 tmp2, imag(VB[j,j]), imag(A[k,j]) ,r);
+#             tmp1 = real(A[k,j])
+#             ccall((:mpfr_sub, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                 real(A[k,j]), tmp1, tmp2, r);
+
+#             ccall((:mpfr_mul, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                 tmp1, real(VB[j,j]), imag(A[k,j]) ,r);
+#             ccall((:mpfr_add, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                 tmp2, imag(VB[j,j]), tmp1, r);
+#             ccall((:mpfr_add, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                 imag(A[k,j]), tmp1, tmp2, r);
+#         end
+
+#         for i = j-1 : -1 : 1
+#             for k = 1 : m
+#                 # A[k, j] = A[k, j] + VB[i,j] * A[k, i];
+#                 ccall((:mpfr_mul, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                     tmp1, real(VB[i,j]), real(A[k,i]), r);
+#                 ccall((:mpfr_mul, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                     tmp2, imag(VB[i,j]), imag(A[k,i]), r);
+#                 ccall((:mpfr_sub, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                     real(tmp), tmp1, tmp2, r);
+
+#                 ccall((:mpfr_mul, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                     tmp1, real(VB[i,j]), imag(A[k,i]), r);
+#                 ccall((:mpfr_mul, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                     tmp2, imag(VB[i,j]), real(A[k,i]), r);
+#                 ccall((:mpfr_add, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                     imag(tmp), tmp1, tmp2, r);
+                
+#                 ccall((:mpfr_add, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                     real(A[k,j]), real(tmp), real(A[k,j]) ,r);
+#                 ccall((:mpfr_add, :libmpfr), Int32, (Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, Ref{MPFR_TLS.BigFloat}, MPFR_TLS.MPFRRoundingMode), 
+#                     imag(A[k,j]), imag(tmp), imag(A[k,j]) ,r);
+#             end
+#         end
+#     end
+
+#     A
+# end
 
 function fun2m_taylor(fun, x, y)
     # FUN2M_TAYLOR

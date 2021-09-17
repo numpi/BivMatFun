@@ -50,6 +50,7 @@ function condeigvec(TA)
     
     EA = diagm(randn(m));
     max_tAij = maximum(map(abs, triu(TA, 1)));
+    max_tDA = maximum(map(abs, diag(TA)));
     
     EA = EA / norm(EA) * u * max_tAij;
     
@@ -62,7 +63,8 @@ function condeigvec(TA)
     end
     
     # Calculate the largest group size k
-    ordA = blocking(convert(Matrix{ComplexF64}, TAtilde),delta1);
+    TAtilde_f = convert(Matrix{ComplexF64}, TAtilde)
+    ordA = blocking(TAtilde_f, delta1 * max_tDA);
     kA = largest_block(ordA);
     
     if kA > 1  # evaluate the required precision uh

@@ -29,8 +29,7 @@ function estimate_condeig(V::UpperTriangular)
         return kV2
     end
     
-    kV3 = opnorm(VF, p) * 
-    opnorm(convert(Matrix{ComplexF64}, inv(V)), p)
+    kV3 = opnorm(VF, p) * opnorm(convert(Matrix{ComplexF64}, inv(V)), p)
     
     return kV3
 end
@@ -43,6 +42,7 @@ matrix A (i.e., the diagonal blocks corresponding to the selected partitioning).
 """
 function build_eigendecomp_tree!(T::BivMatTree, maxkV::Float64, A::Union{Matrix{ComplexF64}, Matrix{Float64}}, meth::Algorithm, use_mp = true)	
     if isa(T.A11, BivMatTreeTail)
+
         uh = eps() / T.kV / maxkV;
         d_uh = convert(Int64, max(32, ceil(log10(1 / uh))));
         
@@ -189,6 +189,9 @@ Recursive function constructing the partition tree for a matrix A, according to 
             TA = FA.T; UA = FA.Z;
             diagTA = diag(TA);
         end
+
+        # Make the separation relative with respect to the size of the eigenvalues. 
+        deltaA = deltaA * maximum(map(abs, diagTA))
         
         # Determine reordering of the Schur forms into block forms.
         ordA = blocking(TA, deltaA);
@@ -272,12 +275,17 @@ Recursive function constructing the partition tree for a matrix A, according to 
             F = scalar_fun(f, A, B, C);
             return;
         end
-        
-        t1 = Threads.@spawn fun2m_preprocessing(A, delta, method, bs, strategy)
-        t2 = Threads.@spawn fun2m_preprocessing(B, delta, method, bs, strategy)
-        
-        UA, TA, treeA, info.nblocksA = fetch(t1)
-        UB, TB, treeB, info.nblocksB = fetch(t2)
+
+        if parallel
+            t1 = Threads.@spawn fun2m_preprocessing(A, delta, method, bs, strategy)
+            t2 = Threads.@spawn fun2m_preprocessing(B, delta, method, bs, strategy)
+            
+            UA, TA, treeA, info.nblocksA = fetch(t1)
+            UB, TB, treeB, info.nblocksB = fetch(t2)
+        else
+            UA, TA, treeA, info.nblocksA = fun2m_preprocessing(A, delta, method, bs, strategy)
+            UB, TB, treeB, info.nblocksB = fun2m_preprocessing(B, delta, method, bs, strategy)
+        end
         
         info.time_fun2mric = @timed begin
             

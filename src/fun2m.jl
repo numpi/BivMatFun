@@ -149,7 +149,6 @@ Recursive function constructing the partition tree for a matrix A, according to 
             
             nblocks = nblocks1 + nblocks2;
             
-            
             T.sylv = sylvester(A[i1:i2, i1:i2], -A[j1:j2, j1:j2], -A[i1:i2, j1:j2])
             
             ninv = norm(T.sylv) / norm(A[i1:i2, j1:j2]);
@@ -189,9 +188,6 @@ Recursive function constructing the partition tree for a matrix A, according to 
             TA = FA.T; UA = FA.Z;
             diagTA = diag(TA);
         end
-
-        # Make the separation relative with respect to the size of the eigenvalues. 
-        deltaA = deltaA * maximum(map(abs, diagTA))
         
         # Determine reordering of the Schur forms into block forms.
         ordA = blocking(TA, deltaA);

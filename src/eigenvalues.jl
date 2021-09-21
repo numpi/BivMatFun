@@ -64,7 +64,7 @@ function condeigvec(TA)
     
     # Calculate the largest group size k
     TAtilde_f = convert(Matrix{ComplexF64}, TAtilde)
-    ordA = blocking(TAtilde_f, delta1 * max_tDA);
+    ordA = blocking(TAtilde_f, delta1);
     kA = largest_block(ordA);
     
     if kA > 1  # evaluate the required precision uh
